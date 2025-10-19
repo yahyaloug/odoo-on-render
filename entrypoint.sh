@@ -29,6 +29,7 @@ data_dir = /var/lib/odoo
 logfile = False
 log_level = info
 http_port = ${PORT}
+db_filter = ^${DB_NAME}$
 EOC
 
 mkdir -p /var/lib/odoo
@@ -36,13 +37,9 @@ echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
 echo "=========================="
 
-# Check if database is initialized
-echo "=== Checking if database needs initialization ==="
-if ! psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -c "SELECT 1 FROM ir_module_module LIMIT 1" 2>/dev/null; then
-    echo "Database not initialized. Installing base module..."
-    odoo -c /etc/odoo/odoo.conf -i base --stop-after-init
-    echo "Base module installed successfully!"
-fi
+# Initialize database if needed
+echo "=== Initializing Odoo Database ==="
+odoo -c /etc/odoo/odoo.conf -i base --stop-after-init --without-demo=all
 
 echo "=== Starting Odoo ==="
-exec "$@"
+exec odoo -c /etc/odoo/odoo.conf
