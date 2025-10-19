@@ -1,7 +1,8 @@
 FROM odoo:17.0
 
-# Copy with execute permissions directly (no chmod needed!)
+WORKDIR /usr/src/app
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["odoo", "-c", "/etc/odoo/odoo.conf"]
+# Add -i base to initialize the database on first run
+CMD ["odoo", "-c", "/etc/odoo/odoo.conf", "-i", "base", "--stop-after-init"]
