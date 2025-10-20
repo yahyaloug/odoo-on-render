@@ -47,5 +47,46 @@ echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
 echo "=========================="
 
+# Create init script to set admin user
+cat > /tmp/init_admin.py <<'PYTHON'
+import odoo
+from odoo import api, SUPERUSER_ID
+
+def init_admin():
+    with api.Environment.manage():
+        registry = odoo.registry(odoo.tools.config['db_name'])
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            # Check if admin user exists
+            admin_user = env['res.users'].search([('login', '=', 'admin')], limit=1)
+            if not admin_user:
+                print("Creating admin user...")
+                env['res.users'].create({
+                    'name': 'Administrator',
+                    'login': 'admin',
+                    'password': 'admin',
+                    'email': 'admin@example.com',
+                })
+                cr.commit()
+                print("Admin user created: login=admin, password=admin")
+            else:
+                print("Admin user already exists")
+
+if __name__ == '__main__':
+    odoo.tools.config.parse_config(['-c', '/etc/odoo/odoo.conf'])
+    init_admin()
+PYTHON
+
 echo "=== Starting Odoo ==="
-exec odoo -c /etc/odoo/odoo.conf --load-language=en_US
+# Start Odoo in background
+odoo -c /etc/odoo/odoo.conf &
+ODOO_PID=$!
+
+# Wait for Odoo to start
+sleep 10
+
+# Create admin user
+python3 /tmp/init_admin.py
+
+# Keep Odoo running
+wait $ODOO_PID
