@@ -31,6 +31,7 @@ log_level = info
 http_port = ${PORT}
 db_filter = ^${DB_NAME}$
 list_db = False
+proxy_mode = True
 EOC
 
 mkdir -p /var/lib/odoo
@@ -39,5 +40,5 @@ echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
 echo "=========================="
 
-echo "=== Starting Odoo (will auto-initialize if needed) ==="
-exec odoo -c /etc/odoo/odoo.conf --db-filter=^${DB_NAME}$
+echo "=== Starting Odoo ==="
+exec odoo -c /etc/odoo/odoo.conf
