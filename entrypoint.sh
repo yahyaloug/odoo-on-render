@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# ===============================
-# Environment variables with defaults
-# ===============================
 : "${DB_HOST:=localhost}"
 : "${DB_PORT:=5432}"
 : "${DB_USER:=odoo}"
@@ -12,16 +9,8 @@ set -e
 : "${DB_NAME:=postgres}"
 : "${PORT:=8069}"
 
-echo "=== Database Connection Info ==="
-echo "DB_HOST: ${DB_HOST}"
-echo "DB_PORT: ${DB_PORT}"
-echo "DB_USER: ${DB_USER}"
-echo "DB_NAME: ${DB_NAME}"
-echo "================================"
+mkdir -p /var/lib/odoo
 
-# ===============================
-# Generate Odoo configuration
-# ===============================
 cat > /etc/odoo/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
@@ -47,55 +36,5 @@ limit_time_cpu = 600
 limit_time_real = 1200
 EOC
 
-mkdir -p /var/lib/odoo
-
-echo "=== Odoo Configuration ==="
-cat /etc/odoo/odoo.conf
-echo "=========================="
-
-# ===============================
-# Admin user initialization
-# ===============================
-cat > /tmp/init_admin.py <<'PYTHON'
-import odoo
-from odoo import api, SUPERUSER_ID
-
-def init_admin():
-    db_name = odoo.tools.config['db_name']
-    with odoo.registry(db_name).cursor() as cr:
-        env = api.Environment(cr, SUPERUSER_ID, {})
-        # Check if admin user exists
-        admin_user = env['res.users'].search([('login', '=', 'admin')], limit=1)
-        if not admin_user:
-            print("Creating admin user...")
-            env['res.users'].create({
-                'name': 'Administrator',
-                'login': 'admin',
-                'password': 'admin',
-                'email': 'admin@example.com',
-            })
-            cr.commit()
-            print("Admin user created: login=admin, password=admin")
-        else:
-            print("Admin user already exists")
-
-if __name__ == '__main__':
-    odoo.tools.config.parse_config(['-c', '/etc/odoo/odoo.conf'])
-    init_admin()
-PYTHON
-
-# ===============================
-# Start Odoo and initialize admin
-# ===============================
 echo "=== Starting Odoo ==="
-odoo -c /etc/odoo/odoo.conf &
-ODOO_PID=$!
-
-# Wait for Odoo to start
-sleep 10
-
-# Create admin user
-python3 /tmp/init_admin.py
-
-# Keep Odoo running
-wait $ODOO_PID
+exec odoo -c /etc/odoo/odoo.conf
