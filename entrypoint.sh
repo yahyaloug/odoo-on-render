@@ -30,16 +30,14 @@ logfile = False
 log_level = info
 http_port = ${PORT}
 db_filter = ^${DB_NAME}$
+list_db = False
 EOC
 
 mkdir -p /var/lib/odoo
+
 echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
 echo "=========================="
 
-# Initialize database if needed
-echo "=== Initializing Odoo Database ==="
-odoo -c /etc/odoo/odoo.conf -i base --stop-after-init --without-demo=all
-
-echo "=== Starting Odoo ==="
-exec odoo -c /etc/odoo/odoo.conf
+echo "=== Starting Odoo (will auto-initialize if needed) ==="
+exec odoo -c /etc/odoo/odoo.conf --db-filter=^${DB_NAME}$
