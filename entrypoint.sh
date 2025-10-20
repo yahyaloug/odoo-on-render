@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# ===============================
+# Environment variables with defaults
+# ===============================
 : "${DB_HOST:=localhost}"
 : "${DB_PORT:=5432}"
 : "${DB_USER:=odoo}"
@@ -16,6 +19,9 @@ echo "DB_USER: ${DB_USER}"
 echo "DB_NAME: ${DB_NAME}"
 echo "================================"
 
+# ===============================
+# Generate Odoo configuration
+# ===============================
 cat > /etc/odoo/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
@@ -47,38 +53,41 @@ echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
 echo "=========================="
 
-# Create init script to set admin user
+# ===============================
+# Admin user initialization
+# ===============================
 cat > /tmp/init_admin.py <<'PYTHON'
 import odoo
 from odoo import api, SUPERUSER_ID
 
 def init_admin():
-    with api.Environment.manage():
-        registry = odoo.registry(odoo.tools.config['db_name'])
-        with registry.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            # Check if admin user exists
-            admin_user = env['res.users'].search([('login', '=', 'admin')], limit=1)
-            if not admin_user:
-                print("Creating admin user...")
-                env['res.users'].create({
-                    'name': 'Administrator',
-                    'login': 'admin',
-                    'password': 'admin',
-                    'email': 'admin@example.com',
-                })
-                cr.commit()
-                print("Admin user created: login=admin, password=admin")
-            else:
-                print("Admin user already exists")
+    db_name = odoo.tools.config['db_name']
+    with odoo.registry(db_name).cursor() as cr:
+        env = api.Environment(cr, SUPERUSER_ID, {})
+        # Check if admin user exists
+        admin_user = env['res.users'].search([('login', '=', 'admin')], limit=1)
+        if not admin_user:
+            print("Creating admin user...")
+            env['res.users'].create({
+                'name': 'Administrator',
+                'login': 'admin',
+                'password': 'admin',
+                'email': 'admin@example.com',
+            })
+            cr.commit()
+            print("Admin user created: login=admin, password=admin")
+        else:
+            print("Admin user already exists")
 
 if __name__ == '__main__':
     odoo.tools.config.parse_config(['-c', '/etc/odoo/odoo.conf'])
     init_admin()
 PYTHON
 
+# ===============================
+# Start Odoo and initialize admin
+# ===============================
 echo "=== Starting Odoo ==="
-# Start Odoo in background
 odoo -c /etc/odoo/odoo.conf &
 ODOO_PID=$!
 
