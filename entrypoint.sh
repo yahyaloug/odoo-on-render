@@ -20,11 +20,8 @@ echo "DB_NAME: ${DB_NAME}"
 echo "================================"
 
 # ===============================
-# Generate Odoo config file
+# Generate Odoo 18 configuration
 # ===============================
-mkdir -p /var/lib/odoo
-mkdir -p /etc/odoo
-
 cat > /etc/odoo/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
@@ -34,19 +31,26 @@ db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
 addons_path = /mnt/extra-addons
 data_dir = /var/lib/odoo
-list_db = True
-proxy_mode = True
-log_level = info
+logfile = /var/log/odoo/odoo.log
 http_port = ${PORT}
-dbfilter = .*
+proxy_mode = True
+workers = 2
+max_cron_threads = 1
+limit_memory_hard = 2684354560
+limit_memory_soft = 2147483648
+limit_request = 8192
+limit_time_cpu = 600
+limit_time_real = 1200
 EOC
 
-echo "=== Odoo Config ==="
+mkdir -p /var/lib/odoo /var/log/odoo
+
+echo "=== Odoo Configuration Ready ==="
 cat /etc/odoo/odoo.conf
-echo "==================="
+echo "================================"
 
 # ===============================
-# Start Odoo
+# Start Odoo 18
 # ===============================
-echo "=== Starting Odoo 18 Server ==="
+echo "=== Starting Odoo 18 ==="
 exec odoo -c /etc/odoo/odoo.conf
