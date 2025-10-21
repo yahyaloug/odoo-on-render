@@ -20,11 +20,12 @@ echo "DB_NAME: ${DB_NAME}"
 echo "================================"
 
 # ===============================
-# Generate Odoo configuration
+# Use HOME for writable files
 # ===============================
-mkdir -p /app/odoo-data
+mkdir -p $HOME/odoo-data
+mkdir -p $HOME/addons
 
-cat > /app/odoo.conf <<EOC
+cat > $HOME/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
 db_host = ${DB_HOST}
@@ -32,8 +33,8 @@ db_port = ${DB_PORT}
 db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
 db_name = ${DB_NAME}
-addons_path = /app/addons
-data_dir = /app/odoo-data
+addons_path = $HOME/addons
+data_dir = $HOME/odoo-data
 logfile = False
 log_level = info
 http_port = ${PORT}
@@ -53,4 +54,4 @@ EOC
 # Start Odoo
 # ===============================
 echo "=== Starting Odoo ==="
-odoo -c /app/odoo.conf
+odoo -c $HOME/odoo.conf
