@@ -3,7 +3,12 @@ set -e
 
 # Create necessary directories if they don't exist
 mkdir -p /var/lib/odoo/odoo-data
+mkdir -p /var/lib/odoo/odoo-data/filestore
+mkdir -p /var/lib/odoo/odoo-data/sessions
 mkdir -p /etc/odoo
+
+# Ensure proper permissions
+chmod -R 755 /var/lib/odoo/odoo-data
 
 # Use environment variables
 ODOO_CONF="/etc/odoo/odoo.conf"
@@ -16,10 +21,10 @@ db_host = ${DB_HOST}
 db_port = ${DB_PORT}
 db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
-db_name = False
+db_name = ${DB_NAME}
 addons_path = /usr/lib/python3/dist-packages/odoo/addons
 data_dir = /var/lib/odoo/odoo-data
-list_db = True
+list_db = False
 proxy_mode = True
 http_port = ${PORT:-8069}
 workers = 0
@@ -34,5 +39,5 @@ EOC
 
 echo "Starting Odoo on port ${PORT:-8069}..."
 
-# Start Odoo directly (already running as odoo user from Dockerfile)
+# Start Odoo normally (will auto-initialize database)
 exec odoo -c $ODOO_CONF
