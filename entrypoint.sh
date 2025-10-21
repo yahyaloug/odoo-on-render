@@ -1,12 +1,9 @@
 #!/bin/bash
 set -e
 
-# Create necessary directories
+# Create necessary directories if they don't exist
 mkdir -p /var/lib/odoo/odoo-data
-mkdir -p /var/lib/odoo/sessions
-
-# Set proper permissions
-chown -R odoo:odoo /var/lib/odoo
+mkdir -p /etc/odoo
 
 # Use environment variables
 ODOO_CONF="/etc/odoo/odoo.conf"
@@ -31,11 +28,7 @@ limit_time_cpu = 600
 limit_time_real = 1200
 EOC
 
-# Set proper permissions for config
-chown odoo:odoo $ODOO_CONF
-chmod 640 $ODOO_CONF
-
 echo "Starting Odoo on port ${PORT:-8069}..."
 
-# Start Odoo as odoo user
-exec gosu odoo odoo -c $ODOO_CONF
+# Start Odoo directly (already running as odoo user from Dockerfile)
+exec odoo -c $ODOO_CONF
