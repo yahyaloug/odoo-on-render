@@ -2,14 +2,14 @@
 set -e
 
 # ===============================
-# Default environment variables
+# Environment variables
 # ===============================
-: "${DB_HOST:=localhost}"
+: "${DB_HOST:?Need to set DB_HOST}"
 : "${DB_PORT:=5432}"
-: "${DB_USER:=odoo}"
-: "${DB_PASSWORD:=odoo}"
-: "${DB_NAME:=postgres}"
+: "${DB_USER:?Need to set DB_USER}"
+: "${DB_PASSWORD:?Need to set DB_PASSWORD}"
 : "${ADMIN_PASSWORD:=admin}"
+: "${DB_NAME:?Need to set DB_NAME}"
 : "${PORT:=8069}"
 
 echo "=== Database Connection Info ==="
@@ -20,8 +20,9 @@ echo "DB_NAME: ${DB_NAME}"
 echo "================================"
 
 # ===============================
-# Generate Odoo 18 configuration
+# Generate Odoo configuration
 # ===============================
+mkdir -p /etc/odoo
 cat > /etc/odoo/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
@@ -29,10 +30,14 @@ db_host = ${DB_HOST}
 db_port = ${DB_PORT}
 db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
+db_name = ${DB_NAME}
 addons_path = /mnt/extra-addons
 data_dir = /var/lib/odoo
-logfile = /var/log/odoo/odoo.log
+logfile = False
+log_level = info
 http_port = ${PORT}
+db_filter = ^${DB_NAME}$
+list_db = True
 proxy_mode = True
 workers = 2
 max_cron_threads = 1
@@ -43,14 +48,14 @@ limit_time_cpu = 600
 limit_time_real = 1200
 EOC
 
-mkdir -p /var/lib/odoo /var/log/odoo
+mkdir -p /var/lib/odoo
 
-echo "=== Odoo Configuration Ready ==="
+echo "=== Odoo Configuration ==="
 cat /etc/odoo/odoo.conf
-echo "================================"
+echo "=========================="
 
 # ===============================
-# Start Odoo 18
+# Start Odoo
 # ===============================
-echo "=== Starting Odoo 18 ==="
-exec odoo -c /etc/odoo/odoo.conf
+echo "=== Starting Odoo ==="
+odoo -c /etc/odoo/odoo.conf
