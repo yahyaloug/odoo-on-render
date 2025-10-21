@@ -2,7 +2,7 @@
 set -e
 
 # ===============================
-# Environment variables with defaults
+# Environment variables
 # ===============================
 : "${DB_HOST:=dpg-d3rn17emcj7s73cpnfo0-a.oregon-postgres.render.com}"
 : "${DB_PORT:=5432}"
@@ -20,11 +20,12 @@ echo "DB_NAME: ${DB_NAME}"
 echo "================================"
 
 # ===============================
-# Use HOME for writable files
+# Use $HOME for writable paths
 # ===============================
 mkdir -p $HOME/odoo-data
 mkdir -p $HOME/addons
 
+# Create Odoo config
 cat > $HOME/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
