@@ -4,25 +4,19 @@ set -e
 # ===============================
 # Environment variables
 # ===============================
-: "${DB_HOST:?Need to set DB_HOST}"
+: "${DB_HOST:=dpg-d3rn17emcj7s73cpnfo0-a.oregon-postgres.render.com}"
 : "${DB_PORT:=5432}"
-: "${DB_USER:?Need to set DB_USER}"
-: "${DB_PASSWORD:?Need to set DB_PASSWORD}"
+: "${DB_USER:=odoo_db_v18_user}"
+: "${DB_PASSWORD:=1Xm4omYi5xff1L0q5m58JU8aNKYwKYl9}"
+: "${DB_NAME:=odoo_db_v18}"
 : "${ADMIN_PASSWORD:=admin}"
-: "${DB_NAME:?Need to set DB_NAME}"
 : "${PORT:=8069}"
 
-echo "=== Database Connection Info ==="
-echo "DB_HOST: ${DB_HOST}"
-echo "DB_PORT: ${DB_PORT}"
-echo "DB_USER: ${DB_USER}"
-echo "DB_NAME: ${DB_NAME}"
-echo "================================"
-
 # ===============================
-# Generate Odoo configuration
+# Create Odoo config
 # ===============================
 mkdir -p /etc/odoo
+
 cat > /etc/odoo/odoo.conf <<EOC
 [options]
 admin_passwd = ${ADMIN_PASSWORD}
@@ -37,7 +31,7 @@ logfile = False
 log_level = info
 http_port = ${PORT}
 db_filter = ^${DB_NAME}$
-list_db = True
+list_db = False
 proxy_mode = True
 workers = 2
 max_cron_threads = 1
@@ -50,12 +44,19 @@ EOC
 
 mkdir -p /var/lib/odoo
 
-echo "=== Odoo Configuration ==="
-cat /etc/odoo/odoo.conf
-echo "=========================="
+# ===============================
+# Initialize database if empty
+# ===============================
+echo "=== Checking if database is initialized ==="
+if ! PGPASSWORD=${DB_PASSWORD} psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -c '\dt' | grep -q "res_users"; then
+    echo "Database empty or not initialized. Installing base module..."
+    odoo -c /etc/odoo/odoo.conf -i base --stop-after-init
+else
+    echo "Database already initialized."
+fi
 
 # ===============================
-# Start Odoo
+# Start Odoo server
 # ===============================
 echo "=== Starting Odoo ==="
-odoo -c /etc/odoo/odoo.conf
+exec odoo -c /etc/odoo/odoo.conf
