@@ -22,10 +22,14 @@ data_dir = /var/lib/odoo/odoo-data
 list_db = True
 proxy_mode = True
 http_port = ${PORT:-8069}
-workers = 2
-max_cron_threads = 1
+workers = 0
+max_cron_threads = 0
+limit_memory_hard = 2684354560
+limit_memory_soft = 2147483648
 limit_time_cpu = 600
 limit_time_real = 1200
+db_maxconn = 64
+log_level = info
 EOC
 
 echo "Starting Odoo on port ${PORT:-8069}..."
